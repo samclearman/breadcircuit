@@ -1,0 +1,157 @@
+<script> // BREADBOAD OBJECT //
+(function(){
+
+  this.breadBoard = {};
+
+
+Array.remove = function(array, from, to) {
+  var rest = array.slice((to || from) + 1 || array.length);
+  array.length = from < 0 ? array.length + from : from;
+  return array.push.apply(array, rest);
+};
+
+
+  //// GLOBAL DEFAULTS /////////////////////////////////////////////////////////
+  var defs = {
+    rows: 64
+  };
+
+  //// COMPONENT MODEL /////////////////////////////////////////////////////////
+  var Component = function Component(name,type,connections){
+    this.type = type.name;     
+    this.name = name;  
+    this.breadBoard = breadBoard;
+    for(var i in this.type){
+      this[i]=type[i];
+    }
+    this.connections=[];  
+    for(var i in connections){
+      this.connections[i] = this.breadBoard.holes[connections[i]];
+      this.breadBoard.holes[connections[i]].connections[this.breadBoard.holes[connections[i]].connections.length] = this;
+    }
+    return this;
+  };
+
+  Component.prototype.connect = function connect(connections){
+    return this;
+  };
+
+  Component.prototype.disconnect = function disconnect(){
+    for(var i in this.connections){
+      for( var j in this.connections[i].connections ){
+        if( this.connections[i].connections[j] === this ){
+          delete this.connections[i].connections[j];
+         // ARRAY REMOVE
+        }
+      }
+      // ARRAY REMOVE
+      delete this.connections[i];
+    }
+    this.connections = [];
+    return this;
+  };
+
+  //// BREADBOARD MODEL ////////////////////////////////////////////////////////
+  var Hole = function Hole( strip ){   
+    this.type ='hole';
+    this.strip = strip;
+    this.connections = [];
+    return this;
+  };
+
+  var Strip = function Strip( holes ){
+    this.type ='strip';
+    this.holes={};
+    if( holes ){
+      for(var i=0, l=holes; i < l; i++){
+        this.holes[''+i] = new Hole(); 
+        this.holes[''+i].strip = this;
+      }
+    }
+    return this;
+  };
+
+  var Breadboard = function Breadboard(){
+    this.type ='Breadboard';
+    
+    // Creaye power-rails
+    this.powerRail = { // I was told these were called power-rails
+      left:{
+        positive: new Strip( 50 ),
+        negative: new Strip( 50 )
+      },
+      right:{
+        positive: new Strip( 50 ),
+        negative: new Strip( 50 )
+      }
+    };
+       
+    for(var i=0, l=defs.rows; i < l; i++ ){
+      newStripL = this.makeStrip();   
+      newStripR = this.makeStrip();
+      for(var a=0, ll=5; a < ll; a++ ){ 
+        var mapCode = String.fromCharCode(a+97)+i;
+        newStripL.holes[mapCode] = this.holes[ mapCode ] = new Hole( newStripL ); 
+        var mapCode = String.fromCharCode(a+102)+i;
+        newStripR.holes[mapCode] = this.holes[ mapCode ] = new Hole( newStripR ); 
+      }
+    }    
+    return this;
+  };
+
+  Breadboard.prototype.strips=[];
+  Breadboard.prototype.components=[];
+  Breadboard.prototype.holes={};
+
+  Breadboard.prototype.makeStrip = function(){
+    var stripLen = this.strips.length;
+    this.strips[ stripLen ] = new Strip();
+    return this.strips[ stripLen ];  
+  };  
+
+  Breadboard.prototype.component = function component(name,type,connections){
+    for(var i in this.components){
+      if(this.components[i].name === name){
+        return this.components[i];
+      }
+    }    
+    return new Component(name, type, connections);
+  };  
+
+  //// COMPONENT TYPES ///////////////////////////////////////////////////////////////  
+  
+  // These will store voltage, resistance & input/output information for spice
+  var wire = {name:'wire'};
+  var transistor = {name:'transistor'};
+  var potentiometer = {name:'potentiometer'};
+  
+  //// TEST CODE ///////////////////////////////////////////////////////////////
+  this.breadBoard = new Breadboard();
+  breadBoard.component('wire1', wire, ['a0','a1']).disconnect();
+  breadBoard.component('wire2', wire, ['a1','c1']);
+
+  console.log( breadBoard );  
+
+  
+})();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
