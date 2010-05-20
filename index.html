@@ -187,7 +187,7 @@
   
   Breadboard.prototype.clear = function() {
     for (k in this.components) {
-      k.destroy();
+      if(k.destroy) {k.destroy()};
     }
   }
 
@@ -253,7 +253,6 @@
           props.colors = arguments[2].split(",");
           //props.resistance = 100; // TEMPORARY FIGURE TO BE CLACULATED FROM COLORS SOON!!
           props.resistance = Resistor.getResistance(props.colors);
-          debug(props.resistance)
           break;
       }
       var newComponent;
@@ -261,7 +260,7 @@
       return newComponent.UID;
     },
     destroy: function(){
-      debug( breadBoard.component(arguments[0]).destroy() );
+      breadBoard.component(arguments[0]).destroy();
     },
     clear: function() {
       breadBoard.clear();
@@ -276,9 +275,10 @@
       // Power and MultiMeter settings will be assumed
       
       //debug( breadBoard.query( arguments[1].split(',') ) );
+      
       breadBoard.component({
         UID: 'meter', 
-        kind: 'vprobe',
+        kind: {'current' : 'iprobe', 'voltage' : 'vprobe'}[arguments[0]],
         connections: arguments[1].split(',')});
     
       breadBoard.component({
@@ -294,6 +294,7 @@
         connections:  ["right_positive_1", "right_negative_1"]});
           
       var result;
+      debug(qucsate.makeNetlist(breadBoard));
       qucsate(qucsate.makeNetlist(breadBoard), function(r){ result = r.meter; } );
       
       breadBoard.component('meter').destroy();
@@ -349,6 +350,9 @@ $(function() {
   debug("Clear the board");
   breadModel('clear');
   
+  debug("Current from one power rail to another");
+  debug(breadModel('query', 'current', 'left_negative_1,left_positive_1', '200k'));
+  
   debug("Voltage in between two 100 ohm resistors");
   r1 = breadModel('insert', 'resistor', 'b1,b2', 'brown,black,brown,gold');
   r2 = breadModel('insert', 'resistor', 'c2,c3', 'brown,black,brown,gold');
@@ -360,11 +364,27 @@ $(function() {
   r3 = breadModel('insert', 'resistor', 'b3,b4', 'brown,black,brown,gold');
   breadModel('move', w2, 'left_positive_4,a4');
   debug(breadModel('query', 'voltage', 'b2,left_negative_1', '200k'));
+  debug("Query the current");  
+  debug(breadModel('query', 'current', 'b2,left_negative_1', '200k'));
+  
   
   debug("Change it to parallel");
   breadModel('move', r3, 'd2,d3');
   breadModel('move', w2, 'left_positive_3,a3');
   debug(breadModel('query', 'voltage', 'b2,left_negative_1', '200k'));
+  
+  var i,v;
+  debug("find the resistance of a brown green brown resistor");
+  debug("insert the resistor");
+  rx = breadModel('insert', 'resistor', 'b5,b6', 'brown,green,brown,gold');
+  debug("connect one end of it to positive");
+  wx = breadModel('insert', 'wire', 'left_positive_5,a5');
+  debug("voltage between the other end of the resistor and negative");
+  debug(i = breadModel('query', 'current', 'a6,left_negative_6', '200k'));
+  debug("voltage for the same");  
+  debug(v = breadModel('query', 'voltage', 'a6,left_negative_6', '200k'));
+  debug("divide to get r");
+  debug(v/i)
   
   
 });

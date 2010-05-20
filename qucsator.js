@@ -82,6 +82,12 @@ qucsate.makeNetlist = function(board) {
         line = 'VProbe:' + component.UID + ' ';
         line = line + nodes.join(' ');
         break;
+      case "iprobe":
+        if (!(nodes.length == 2 && component.UID)) { return; }
+        line = 'IProbe:' + component.UID + ' ';
+        line = line + nodes.join(' ');
+        break;
+        
     }
     
     netlist = netlist + "\n" + line;
