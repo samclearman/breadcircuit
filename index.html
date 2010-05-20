@@ -294,7 +294,6 @@
         connections:  ["right_positive_1", "right_negative_1"]});
           
       var result;
-      debug(qucsate.makeNetlist(breadBoard));
       qucsate(qucsate.makeNetlist(breadBoard), function(r){ result = r.meter; } );
       
       breadBoard.component('meter').destroy();
